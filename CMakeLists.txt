@@ -130,7 +130,8 @@ ENDIF(USE_assimp)
 #    BULLET_COLLISION_LIBRARY_DEBUG:PATH=/usr/local/Cellar/bullet/2.87_1/Frameworks/BulletCollision.framework
 #    BULLET_MATH_LIBRARY_DEBUG:PATH=/usr/local/Cellar/bullet/2.87_1/Frameworks/LinearMath.framework
 #
-option(USE_BULLET "Include bullet example" OFF)
+# option(USE_BULLET "Include bullet example" ON)
+SET(USE_BULLET FALSE)
 IF (USE_BULLET)
 IF (WIN32)
     SET(BULLET_DYNAMICS_LIBRARY  ${CMAKE_SOURCE_DIR}/thirdparty/Win/Bullet/lib/BulletDynamics.lib CACHE PATH "")

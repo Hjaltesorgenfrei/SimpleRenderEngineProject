@@ -1,4 +1,5 @@
 # Add executables (to different projects)
+add_executable(Car-Game car-game.cpp)
 add_executable(SRE-node-editor node-editor.cpp)
 add_executable(SRE-box2d-example box2d-example.cpp)
 add_executable(SRE-box2d-platform-example box2d-platform-example.cpp)
@@ -16,6 +17,7 @@ ENDIF(USE_assimp)
 
 
 # Link projects with project libraries
+target_link_libraries(Car-Game ${all_libs})
 target_link_libraries(SRE-node-editor ${all_libs})
 target_link_libraries(SRE-box2d-example ${all_libs})
 target_link_libraries(SRE-box2d-platform-example ${all_libs})

@@ -111,6 +111,7 @@ public:
         // spawn a few boxes
         spawnBox(500, 500, 45);
         player.body = physicsEntities.back();
+        player.body->SetAngularDamping(5);
 
         r.startEventLoop();
     }
@@ -178,7 +179,7 @@ public:
         }
         b2Body* body = player.body;
         body->SetAwake(true);
-        body->SetAngularVelocity(rotation);
+        body->ApplyAngularImpulse(rotation * 10000, true);
         const int speed = 100000;
         if (player.forward ){
             auto angle = body->GetAngle();

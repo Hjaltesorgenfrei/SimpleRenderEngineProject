@@ -10,9 +10,11 @@
 using namespace sre;
 using namespace std;
 
-struct PlayerControl{
+struct Player{
     bool forward, backwards, left, right;
     b2Body* body;
+    shared_ptr<SpriteAtlas> atlas;
+    float speed = 10000, rotationSpeed = 2000;
 };
 
 // Captures debug information from Box2D as lines (polygon fill and color is discarded)
@@ -79,7 +81,10 @@ public:
         camera.setWindowCoordinates();
 
         atlas = SpriteAtlas::createSingleSprite(Texture::getWhiteTexture());        // Create white test sprite
-
+        player.atlas = SpriteAtlas::create("project_data/car-game.json",Texture::create()
+            .withFile( "project_data/car-game.png")
+            .withFilterSampling(false)
+            .build() );
         b2BodyDef myBodyDef;                                                        // Setup phys
         myBodyDef.type = b2_staticBody; //this will be a static body (does not move)
         myBodyDef.position.Set(0, 0); //set the starting position
@@ -110,8 +115,8 @@ public:
 
         // spawn a few boxes
         spawnBox(500, 500, 45);
-        player.body = physicsEntities.back();
-        player.body->SetAngularDamping(5);
+        spawnPlayer(500, 500, 0);
+
 
         r.startEventLoop();
     }
@@ -133,6 +138,12 @@ public:
         }
         auto sb = SpriteBatch::create().addSprites(sprites.begin(), sprites.end()).build();
         renderPass.draw(sb);
+        if (ImGui::SliderFloat("Forward speed", &player.speed, 1000, 10000)){
+            cout << "Changed Speed\n";
+        }
+        if (ImGui::SliderFloat("Rotation speed", &player.rotationSpeed, 1000, 5000)){
+            cout << "Changed RotationSpeed\n";
+        }
 
         // debug draw
         m_world.DrawDebugData();
@@ -141,11 +152,14 @@ public:
     }
 
     void mouseEvent(SDL_Event& e){
+        if (ImGui::IsMouseHoveringAnyWindow()) {
+            return;
+        }
         if (e.type == SDL_MOUSEBUTTONDOWN){
-            spawn =true;
+            spawn = true;
         }
         if (e.type == SDL_MOUSEBUTTONUP){
-            spawn =false;
+            spawn = false;
         }
         if (e.type == SDL_MOUSEMOTION && spawn){
             auto r = Renderer::instance;
@@ -172,20 +186,50 @@ public:
 
         float rotation = 0;
         if (player.left){
-            rotation -= 4;
+            rotation += 4;
         }
         if (player.right){
-            rotation += 4;
+            rotation -= 4;
         }
         b2Body* body = player.body;
         body->SetAwake(true);
-        body->ApplyAngularImpulse(rotation * 10000, true);
-        const int speed = 100000;
+        const int speed = player.speed;
+        body->ApplyAngularImpulse(rotation * body->GetMass() * deltaTime * player.rotationSpeed, true);
         if (player.forward ){
             auto angle = body->GetAngle();
-            b2Vec2 impulse{glm::cos(angle) * speed * deltaTime, glm::sin(angle) * speed * deltaTime};
+            b2Vec2 impulse{glm::cos(angle) * speed * deltaTime * 1000, glm::sin(angle) * speed * deltaTime * 1000};
             body->ApplyLinearImpulse(impulse, body->GetWorldCenter(), true);
         }
+    }
+
+    void spawnPlayer(int posX, int posY, float angle) {
+        auto sprite = player.atlas->get("simple-travel-car-top_view.svg");
+        const float size = 0.1f;
+        sprite.setScale({size,size});
+        sprite.setPosition({posX,posY});
+        sprite.setColor(glm::vec4{glm::linearRand<float>(0.0f, 1.0f), glm::linearRand<float>(0.0f, 1.0f),
+                                  glm::linearRand<float>(0.0f, 1.0f), 1.0f});
+        sprites.push_back(sprite);
+
+        b2BodyDef myBodyDef;
+        myBodyDef.type = b2_dynamicBody;                //this will be a dynamic body
+        myBodyDef.position.Set(posX,posY);              //set the starting position
+        myBodyDef.angle = angle;                        //set the starting angle
+        auto dynBody = m_world.CreateBody(&myBodyDef);
+
+        b2PolygonShape boxShape;
+        auto sprite_size = sprite.getSpriteSize();
+        boxShape.SetAsBox(sprite_size.x * size / 2,sprite_size.y * size / 2);
+
+        b2FixtureDef boxFixtureDef;
+        boxFixtureDef.shape = &boxShape;
+        boxFixtureDef.restitution = 0.8;   // elasticity [0;1]
+        boxFixtureDef.density = 1;         // weight
+        dynBody->CreateFixture(&boxFixtureDef);
+        physicsEntities.push_back(dynBody);
+        player.body = dynBody;
+        player.body->SetAngularDamping(5);
+        player.body->SetLinearDamping(1);
     }
 
     void spawnBox(int posX, int posY, float angle) {
@@ -223,7 +267,7 @@ private:
     Camera camera;
     Box2DDebugDraw debugDraw;
     bool spawn = false;
-    PlayerControl player{};
+    Player player{};
 };
 
 int main() {

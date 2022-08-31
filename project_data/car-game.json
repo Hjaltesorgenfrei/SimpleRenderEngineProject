@@ -1,0 +1,20 @@
+{"frames": [
+
+{
+	"filename": "simple-travel-car-top_view.svg",
+	"frame": {"x":0,"y":0,"w":959,"h":475},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":959,"h":475},
+	"sourceSize": {"w":959,"h":475}
+}],
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "car-game.png",
+	"format": "RGBA8888",
+	"size": {"w":959,"h":475},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:79c26f6f81c909b3f1f1afa49e980075:be1b3e3e93cb1b7286142517c247869b:571ab89812e198495d4ab3dd83e74f9a$"
+}
+}

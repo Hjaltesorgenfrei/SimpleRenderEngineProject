@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "limits": "cpp",
+        "stdexcept": "cpp",
+        "cinttypes": "cpp",
+        "*.tcc": "cpp",
+        "valarray": "cpp",
+        "*.def": "cpp",
+        "*.inc": "cpp"
+    }
+}

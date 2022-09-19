@@ -51,14 +51,7 @@ AsteroidsGame::AsteroidsGame() {
     time_t t;  // random seed based on time
     srand((unsigned)time(&t));
 
-    atlas = SpriteAtlas::create("asteroids.json", "asteroids.png");
-    auto spaceshipSprite = atlas->get("playerShip1_green.png");
-    gameObjects.push_back(std::make_shared<SpaceShip>(spaceshipSprite));
-
-    for (int i = 0; i < 5; i++) {
-        auto astroidSprite = getAsteroidOfSize(LARGE, atlas);
-        gameObjects.push_back(std::make_shared<Asteroid>(astroidSprite, LARGE));
-    }
+    init();
 
     camera.setWindowCoordinates();
 
@@ -77,6 +70,19 @@ AsteroidsGame::AsteroidsGame() {
     r.startEventLoop();
 }
 
+void AsteroidsGame::init() {
+    gameObjects.clear();
+    gameOver = false;
+    atlas = SpriteAtlas::create("asteroids.json", "asteroids.png");
+    auto spaceshipSprite = atlas->get("playerShip1_green.png");
+    gameObjects.push_back(std::make_shared<SpaceShip>(spaceshipSprite));
+
+    for (int i = 0; i < 5; i++) {
+        auto astroidSprite = getAsteroidOfSize(LARGE, atlas);
+        gameObjects.push_back(std::make_shared<Asteroid>(astroidSprite, LARGE));
+    }
+}
+
 template <typename T>
 std::shared_ptr<T> castTwo(std::shared_ptr<GameObject> a, std::shared_ptr<GameObject> b) {
     auto castA = std::dynamic_pointer_cast<T>(a);
@@ -89,9 +95,7 @@ std::shared_ptr<T> castTwo(std::shared_ptr<GameObject> a, std::shared_ptr<GameOb
 
 void AsteroidsGame::update(float deltaTime) {
     for (int i = 0; i < gameObjects.size(); i++) {
-        for (int j = 0; j < gameObjects.size(); j++) {
-            if (j == i) continue;
-
+        for (int j = i + 1; j < gameObjects.size(); j++) {
             auto a = gameObjects[i];
             auto colA = std::dynamic_pointer_cast<Collidable>(a);
             auto b = gameObjects[j];
@@ -112,6 +116,23 @@ void AsteroidsGame::update(float deltaTime) {
                             gameObjects.push_back(std::make_shared<Asteroid>(astroidSprite, size, asteroidColliding->position));
                         }
                     }
+                }
+
+                if (spaceShipColliding && asteroidColliding && !spaceShipColliding->cleanUp && !asteroidColliding->cleanUp) {
+                    spaceShipColliding->onCollision(asteroidColliding);
+                    asteroidColliding->onCollision(laserColliding);
+                    if(asteroidColliding->size > 0) {
+                        for (int spawning = 0; spawning < 3; spawning++)  {
+                            auto size = (AsteroidSize)(asteroidColliding->size - 1);
+                            auto astroidSprite = getAsteroidOfSize(size, atlas);
+                            gameObjects.push_back(std::make_shared<Asteroid>(astroidSprite, size, asteroidColliding->position));
+                        }
+                    }
+                    auto bangSprite = atlas->get("bang.png");
+                    auto bangSign = std::make_shared<GameObject>(bangSprite);
+                    bangSign->position = spaceShipColliding->position;
+                    gameObjects.push_back(bangSign);
+                    gameOver = true;
                 }
             }
         }
@@ -184,6 +205,9 @@ void AsteroidsGame::keyEvent(SDL_Event& event) {
     }
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_d) {
         debugCollisionCircles = !debugCollisionCircles;
+    }
+    if (gameOver && event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) {
+        init();
     }
 }
 

@@ -14,12 +14,12 @@ private:
     void update(float deltaTime);
     void render();
     void keyEvent(SDL_Event &event);
+    void spawnLaser(std::shared_ptr<SpaceShip> spaceShip);
 
     sre::Camera camera;
     sre::SDLRenderer r;
     std::shared_ptr<sre::SpriteAtlas> atlas;
     std::vector<std::shared_ptr<GameObject>> gameObjects;
-    std::shared_ptr<SpaceShip> spaceShip;
     bool debugCollisionCircles = false;
     int score = 0;
 };

@@ -4,10 +4,13 @@
 
 #include <ctime>
 #include <glm/gtc/constants.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/rotate_vector.hpp>
 #include "AsteroidsGame.hpp"
 #include "GameObject.hpp"
 #include "SpaceShip.hpp"
 #include "Asteroid.hpp"
+#include "Laser.hpp"
 #include <iostream>
 #include <algorithm>
 
@@ -49,8 +52,7 @@ AsteroidsGame::AsteroidsGame() {
 
     atlas = SpriteAtlas::create("asteroids.json","asteroids.png");
     auto spaceshipSprite = atlas->get("playerShip1_green.png");
-    spaceShip = std::make_shared<SpaceShip>(spaceshipSprite);
-    gameObjects.push_back(spaceShip);
+    gameObjects.push_back(std::make_shared<SpaceShip>(spaceshipSprite));
 
     for (int i = 0; i < 5; i++) {
         auto size = (AsteroidSize)(i % (LARGE + 1));
@@ -76,9 +78,10 @@ AsteroidsGame::AsteroidsGame() {
 }
 
 void AsteroidsGame::update(float deltaTime) {
-	for (int i = 0; i < gameObjects.size();i++) {
-		gameObjects[i]->update(deltaTime);
-    }
+    gameObjects.erase(std::remove_if(gameObjects.begin(), gameObjects.end(), [deltaTime](std::shared_ptr<GameObject> gameObject){
+        gameObject->update(deltaTime);
+        return gameObject->cleanUp;
+    }), gameObjects.end());
 }
 
 void drawCircle(std::vector<glm::vec3>& lines, glm::vec2 position, float radius){
@@ -132,10 +135,23 @@ void AsteroidsGame::render() {
 void AsteroidsGame::keyEvent(SDL_Event &event) {
     for (int i = 0; i < gameObjects.size();i++) {
         gameObjects[i]->onKey(event);
+        auto spaceShip = std::dynamic_pointer_cast<SpaceShip>(gameObjects[i]); 
+        if(spaceShip && event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) {
+            spawnLaser(spaceShip);
+        }
     }
     if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_d){
         debugCollisionCircles = !debugCollisionCircles;
     }
+}
+
+void AsteroidsGame::spawnLaser(std::shared_ptr<SpaceShip> spaceShip) {
+    auto laserSprite = atlas->get("Lasers/laserBlue01.png");
+    auto position = spaceShip->position;
+    glm::vec2 direction = glm::rotateZ(glm::vec3(0,1.0f,0), glm::radians(spaceShip->rotation));
+    position += direction * spaceShip->getRadius();
+    gameObjects.push_back(std::make_shared<Laser>(laserSprite, position, direction));
+
 }
 
 int main(){

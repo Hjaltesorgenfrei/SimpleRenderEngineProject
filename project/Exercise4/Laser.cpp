@@ -16,6 +16,7 @@ uint64_t currentTime() {
 Laser::Laser(const sre::Sprite &sprite, glm::vec2 position, glm::vec2 direction) : GameObject(sprite) {
     scale = glm::vec2(0.5f,0.5f);
     winSize = sre::Renderer::instance->getDrawableSize();
+    this->radius = 7;
     this->position = position;
     this->velocity = direction * 200.0f;
     this->rotation = glm::degrees(glm::atan(velocity.y, velocity.x)) - 90.0f;

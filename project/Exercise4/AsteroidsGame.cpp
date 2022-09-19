@@ -79,6 +79,21 @@ AsteroidsGame::AsteroidsGame() {
 }
 
 void AsteroidsGame::update(float deltaTime) {
+    for (int i = 0; i < gameObjects.size(); i++) {
+        for (int j = 0; j < gameObjects.size(); j++) {
+            if (j == i) continue;
+
+            auto a = gameObjects[i];
+            auto colA = std::dynamic_pointer_cast<Collidable>(a);
+            auto b = gameObjects[j];
+            auto colB = std::dynamic_pointer_cast<Collidable>(b);
+            if (colA && colB && glm::distance(a->position, b->position) <= colA->getRadius() + colB->getRadius()) {
+                colA->onCollision(b);
+                colB->onCollision(a);
+            }
+        }
+    }
+
     gameObjects.erase(std::remove_if(
                           gameObjects.begin(),
                           gameObjects.end(),

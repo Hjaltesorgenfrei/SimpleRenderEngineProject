@@ -56,9 +56,8 @@ AsteroidsGame::AsteroidsGame() {
     gameObjects.push_back(std::make_shared<SpaceShip>(spaceshipSprite));
 
     for (int i = 0; i < 5; i++) {
-        auto size = (AsteroidSize)(i % (LARGE + 1));
-        auto astroidSprite = getAsteroidOfSize(size, atlas);
-        gameObjects.push_back(std::make_shared<Asteroid>(astroidSprite, size));
+        auto astroidSprite = getAsteroidOfSize(LARGE, atlas);
+        gameObjects.push_back(std::make_shared<Asteroid>(astroidSprite, LARGE));
     }
 
     camera.setWindowCoordinates();
@@ -78,6 +77,16 @@ AsteroidsGame::AsteroidsGame() {
     r.startEventLoop();
 }
 
+template <typename T>
+std::shared_ptr<T> castTwo(std::shared_ptr<GameObject> a, std::shared_ptr<GameObject> b) {
+    auto castA = std::dynamic_pointer_cast<T>(a);
+    auto castB = std::dynamic_pointer_cast<T>(b);
+    if (castA)
+        return castA;
+    else
+        return castB;
+}
+
 void AsteroidsGame::update(float deltaTime) {
     for (int i = 0; i < gameObjects.size(); i++) {
         for (int j = 0; j < gameObjects.size(); j++) {
@@ -88,8 +97,22 @@ void AsteroidsGame::update(float deltaTime) {
             auto b = gameObjects[j];
             auto colB = std::dynamic_pointer_cast<Collidable>(b);
             if (colA && colB && glm::distance(a->position, b->position) <= colA->getRadius() + colB->getRadius()) {
-                colA->onCollision(b);
-                colB->onCollision(a);
+                auto spaceShipColliding = castTwo<SpaceShip>(a, b);
+                auto asteroidColliding = castTwo<Asteroid>(a, b);
+                auto laserColliding = castTwo<Laser>(a, b);
+                if (laserColliding && asteroidColliding && !laserColliding->cleanUp && !asteroidColliding->cleanUp) {
+                    std::cout << "Laser and Asteroid collided\n";
+                    laserColliding->onCollision(asteroidColliding);
+                    asteroidColliding->onCollision(laserColliding);
+                    score++;
+                    if(asteroidColliding->size > 0) {
+                        for (int spawning = 0; spawning < 3; spawning++)  {
+                            auto size = (AsteroidSize)(asteroidColliding->size - 1);
+                            auto astroidSprite = getAsteroidOfSize(size, atlas);
+                            gameObjects.push_back(std::make_shared<Asteroid>(astroidSprite, size, asteroidColliding->position));
+                        }
+                    }
+                }
             }
         }
     }
@@ -98,6 +121,7 @@ void AsteroidsGame::update(float deltaTime) {
                           gameObjects.begin(),
                           gameObjects.end(),
                           [deltaTime](std::shared_ptr<GameObject> gameObject) {
+                              if (gameObject->cleanUp) return true;  // Don't update objects that should already be deleted
                               gameObject->update(deltaTime);
                               return gameObject->cleanUp;
                           }),

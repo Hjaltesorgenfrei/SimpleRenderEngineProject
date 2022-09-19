@@ -4,6 +4,7 @@
 #include "sre/SDLRenderer.hpp"
 #include "sre/SpriteAtlas.hpp"
 #include "SpaceShip.hpp"
+#include "Asteroid.hpp"
 
 class GameObject;
 

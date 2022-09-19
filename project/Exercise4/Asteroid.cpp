@@ -18,6 +18,7 @@ inline float RandomFloat(float lo, float hi)
 
 Asteroid::Asteroid(const sre::Sprite &sprite, const AsteroidSize size) : GameObject(sprite) {
     scale = glm::vec2(0.5f,0.5f);
+    this->size = size;
     winSize = sre::Renderer::instance->getDrawableSize();
         switch (size) {
         case TINY:
@@ -34,6 +35,29 @@ Asteroid::Asteroid(const sre::Sprite &sprite, const AsteroidSize size) : GameObj
             break;
     }
     position = glm::vec2(RandomFloat(0.0f, winSize.x), RandomFloat(0.0f, winSize.y));
+    velocity = glm::vec2(RandomFloat(-1.0f, 1.0f),RandomFloat(-1.0f, 1.0f)) * 50.0f;
+    rotationSpeed = RandomFloat(-1.0f, 1.0f) * 50.0f;
+}
+
+Asteroid::Asteroid(const sre::Sprite &sprite, const AsteroidSize size, const glm::vec2 position) : GameObject(sprite) {
+    scale = glm::vec2(0.5f,0.5f);
+    this->size = size;
+    winSize = sre::Renderer::instance->getDrawableSize();
+        switch (size) {
+        case TINY:
+            radius = 4;
+            break;
+        case SMALL:
+            radius = 8;
+            break;
+        case MEDIUM:
+            radius = 14;
+            break;
+        case LARGE:
+            radius = 24;
+            break;
+    }
+    this->position = position;
     velocity = glm::vec2(RandomFloat(-1.0f, 1.0f),RandomFloat(-1.0f, 1.0f)) * 50.0f;
     rotationSpeed = RandomFloat(-1.0f, 1.0f) * 50.0f;
 }
@@ -57,7 +81,7 @@ void Asteroid::update(float deltaTime) {
 }
 
 void Asteroid::onCollision(std::shared_ptr<GameObject> other) {
-    std::cout << "Collision of asteroid\n";
+    cleanUp = true;
 }
 
 void Asteroid::onKey(SDL_Event &keyEvent) {

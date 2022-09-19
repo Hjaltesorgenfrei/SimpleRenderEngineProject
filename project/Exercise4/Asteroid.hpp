@@ -13,6 +13,7 @@ enum AsteroidSize {
 class Asteroid : public GameObject, public Collidable  {
 public:
     Asteroid(const sre::Sprite &sprite, const AsteroidSize size);
+    Asteroid(const sre::Sprite &sprite, const AsteroidSize size, const glm::vec2 position);
 
     void update(float deltaTime) override;
 
@@ -21,6 +22,7 @@ public:
     void onKey(SDL_Event &keyEvent) override;
 
     glm::vec2 velocity;
+    AsteroidSize size;
 private:
     glm::vec2 winSize;
     float rotationSpeed;

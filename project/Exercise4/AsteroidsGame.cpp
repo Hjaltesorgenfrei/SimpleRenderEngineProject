@@ -7,7 +7,7 @@
 #include "AsteroidsGame.hpp"
 #include "GameObject.hpp"
 #include "SpaceShip.hpp"
-
+#include <iostream>
 
 using namespace sre;
 
@@ -22,7 +22,10 @@ AsteroidsGame::AsteroidsGame() {
 
     atlas = SpriteAtlas::create("asteroids.json","asteroids.png");
 
-    auto spaceshipSprite = atlas->get("playerShip1_blue.png");
+    for (const auto& s : atlas->getNames()) {
+        std::cout << s << "\n";
+    }
+    auto spaceshipSprite = atlas->get("playerShip1_green.png");
     gameObjects.push_back(std::make_shared<SpaceShip>(spaceshipSprite));
 
     camera.setWindowCoordinates();

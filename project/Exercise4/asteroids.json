@@ -1,0 +1,21 @@
+{"frames": [
+
+{
+	"filename": "playerShip1_blue.png",
+	"frame": {"x":0,"y":0,"w":99,"h":75},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":99,"h":75},
+	"sourceSize": {"w":99,"h":75},
+	"pivot": {"x":0.5,"y":0.5}
+}],
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "astroids.png",
+	"format": "RGBA8888",
+	"size": {"w":128,"h":128},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:2d2b40001ba5a9647a69f1feeeb90613:ca57cff0f83802beb6f6bbc23cb57a90:5466bbc1ed9105e5250229059ef59bfa$"
+}
+}

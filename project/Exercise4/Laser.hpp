@@ -6,7 +6,7 @@
 
 class Laser : public GameObject, public Collidable  {
 public:
-    Laser(const sre::Sprite &sprite, glm::vec2 position, glm::vec2 direction);
+    Laser(const sre::Sprite &sprite, glm::vec2 position, glm::vec2 velocity, glm::vec2 direction);
 
     void update(float deltaTime) override;
 

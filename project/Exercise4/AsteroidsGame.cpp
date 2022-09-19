@@ -167,8 +167,10 @@ void AsteroidsGame::spawnLaser(std::shared_ptr<SpaceShip> spaceShip) {
     auto laserSprite = atlas->get("Lasers/laserBlue01.png");
     auto position = spaceShip->position;
     glm::vec2 direction = glm::rotateZ(glm::vec3(0, 1.0f, 0), glm::radians(spaceShip->rotation));
-    position += direction * spaceShip->getRadius();
-    gameObjects.push_back(std::make_shared<Laser>(laserSprite, position, direction));
+    position += direction * (spaceShip->getRadius() * 1.5f);
+    glm::vec2 velocity = direction * 200.0f;
+    velocity += spaceShip->velocity;
+    gameObjects.push_back(std::make_shared<Laser>(laserSprite, position, velocity, direction));
 }
 
 int main() {

@@ -13,13 +13,13 @@ uint64_t currentTime() {
     return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
 
-Laser::Laser(const sre::Sprite &sprite, glm::vec2 position, glm::vec2 direction) : GameObject(sprite) {
+Laser::Laser(const sre::Sprite &sprite, glm::vec2 position, glm::vec2 velocity, glm::vec2 direction) : GameObject(sprite) {
     scale = glm::vec2(0.5f,0.5f);
     winSize = sre::Renderer::instance->getDrawableSize();
     this->radius = 7;
     this->position = position;
-    this->velocity = direction * 200.0f;
-    this->rotation = glm::degrees(glm::atan(velocity.y, velocity.x)) - 90.0f;
+    this->velocity = velocity;
+    this->rotation = glm::degrees(glm::atan(direction.y, direction.x)) - 90.0f;
     spawnTime = currentTime();
 }
 
@@ -44,7 +44,7 @@ void Laser::update(float deltaTime) {
 }
 
 void Laser::onCollision(std::shared_ptr<GameObject> other) {
-    std::cout << "Collision of Laser\n";
+    cleanUp = true;
 }
 
 void Laser::onKey(SDL_Event &keyEvent) {

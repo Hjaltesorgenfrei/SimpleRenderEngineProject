@@ -5,14 +5,15 @@
 #include <ctime>
 #include <glm/gtc/constants.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
+#include <algorithm>
 #include <glm/gtx/rotate_vector.hpp>
+#include <iostream>
+
+#include "Asteroid.hpp"
 #include "AsteroidsGame.hpp"
 #include "GameObject.hpp"
-#include "SpaceShip.hpp"
-#include "Asteroid.hpp"
 #include "Laser.hpp"
-#include <iostream>
-#include <algorithm>
+#include "SpaceShip.hpp"
 
 using namespace sre;
 
@@ -33,9 +34,10 @@ sre::Sprite getAsteroidOfSize(AsteroidSize size, std::shared_ptr<SpriteAtlas> at
             sizeString = "big";
             break;
     }
-    names.erase(std::remove_if(names.begin(), names.end(), [size, sizeString](std::string name){
-        return strncmp(name.c_str(), "Meteors/", 8) || name.find(sizeString) == std::string::npos;
-    }), names.end());
+    names.erase(std::remove_if(names.begin(), names.end(), [size, sizeString](std::string name) {
+                    return strncmp(name.c_str(), "Meteors/", 8) || name.find(sizeString) == std::string::npos;
+                }),
+                names.end());
     int pick = rand() % names.size();
 
     return atlas->get(names[pick]);
@@ -44,13 +46,12 @@ sre::Sprite getAsteroidOfSize(AsteroidSize size, std::shared_ptr<SpriteAtlas> at
 AsteroidsGame::AsteroidsGame() {
     r.setWindowTitle("Asteroids");
 
-    r.init().withSdlInitFlags(SDL_INIT_EVERYTHING)
-     .withSdlWindowFlags(SDL_WINDOW_OPENGL);
+    r.init().withSdlInitFlags(SDL_INIT_EVERYTHING).withSdlWindowFlags(SDL_WINDOW_OPENGL);
 
-    time_t t;                                               // random seed based on time
-    srand((unsigned) time(&t));
+    time_t t;  // random seed based on time
+    srand((unsigned)time(&t));
 
-    atlas = SpriteAtlas::create("asteroids.json","asteroids.png");
+    atlas = SpriteAtlas::create("asteroids.json", "asteroids.png");
     auto spaceshipSprite = atlas->get("playerShip1_green.png");
     gameObjects.push_back(std::make_shared<SpaceShip>(spaceshipSprite));
 
@@ -62,15 +63,15 @@ AsteroidsGame::AsteroidsGame() {
 
     camera.setWindowCoordinates();
 
-    r.frameUpdate = [&](float deltaTime){
+    r.frameUpdate = [&](float deltaTime) {
         update(deltaTime);
     };
 
-    r.keyEvent = [&](SDL_Event& event){
+    r.keyEvent = [&](SDL_Event& event) {
         keyEvent(event);
     };
 
-    r.frameRender = [&](){
+    r.frameRender = [&]() {
         render();
     };
 
@@ -78,69 +79,71 @@ AsteroidsGame::AsteroidsGame() {
 }
 
 void AsteroidsGame::update(float deltaTime) {
-    gameObjects.erase(std::remove_if(gameObjects.begin(), gameObjects.end(), [deltaTime](std::shared_ptr<GameObject> gameObject){
-        gameObject->update(deltaTime);
-        return gameObject->cleanUp;
-    }), gameObjects.end());
+    gameObjects.erase(std::remove_if(
+                          gameObjects.begin(),
+                          gameObjects.end(),
+                          [deltaTime](std::shared_ptr<GameObject> gameObject) {
+                              gameObject->update(deltaTime);
+                              return gameObject->cleanUp;
+                          }),
+                      gameObjects.end());
 }
 
-void drawCircle(std::vector<glm::vec3>& lines, glm::vec2 position, float radius){
+void drawCircle(std::vector<glm::vec3>& lines, glm::vec2 position, float radius) {
     float quarterPi = glm::quarter_pi<float>();
-    for (float f = 0;f<glm::two_pi<float>();f += quarterPi){
+    for (float f = 0; f < glm::two_pi<float>(); f += quarterPi) {
         // line from
-        lines.push_back(glm::vec3{position.x + cosf(f)*radius,
-                                  position.y + sinf(f)*radius,
-                                  0
-        });
+        lines.push_back(glm::vec3{position.x + cosf(f) * radius,
+                                  position.y + sinf(f) * radius,
+                                  0});
         // line to
-        lines.push_back(glm::vec3{position.x + cosf(f+quarterPi)*radius,
-                                  position.y + sinf(f+quarterPi)*radius,
-                                  0
-        });
+        lines.push_back(glm::vec3{position.x + cosf(f + quarterPi) * radius,
+                                  position.y + sinf(f + quarterPi) * radius,
+                                  0});
     }
 }
 
 void AsteroidsGame::render() {
     auto renderPass = RenderPass::create()
-            .withCamera(camera)
-            .withClearColor(true, {.20, .60, .86, 1})
-            .build();
+                          .withCamera(camera)
+                          .withClearColor(true, {.20, .60, .86, 1})
+                          .build();
     auto spriteBatchBuilder = SpriteBatch::create();
 
-    for (int i = 0; i < gameObjects.size();i++) {
+    for (int i = 0; i < gameObjects.size(); i++) {
         gameObjects[i]->render(spriteBatchBuilder);
     }
     auto spriteBatch = spriteBatchBuilder.build();
     renderPass.draw(spriteBatch);
 
-    if (debugCollisionCircles){
+    if (debugCollisionCircles) {
         std::vector<glm::vec3> lines;
-        for (auto & go : gameObjects){
+        for (auto& go : gameObjects) {
             auto col = std::dynamic_pointer_cast<Collidable>(go);
-            if (col != nullptr){
+            if (col != nullptr) {
                 drawCircle(lines, go->position, col->getRadius());
             }
         }
         renderPass.drawLines(lines);
     }
 
-    ImGui::SetNextWindowPos(ImVec2(Renderer::instance->getWindowSize().x/2-100, .0f), ImGuiSetCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(Renderer::instance->getWindowSize().x / 2 - 100, .0f), ImGuiSetCond_Always);
     ImGui::SetNextWindowSize(ImVec2(200, 70), ImGuiSetCond_Always);
     ImGui::Begin("", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
     ImGui::LabelText("GOs", "%i", (int)gameObjects.size());
-    ImGui::LabelText("Score", "%i",score);
+    ImGui::LabelText("Score", "%i", score);
     ImGui::End();
 }
 
-void AsteroidsGame::keyEvent(SDL_Event &event) {
-    for (int i = 0; i < gameObjects.size();i++) {
+void AsteroidsGame::keyEvent(SDL_Event& event) {
+    for (int i = 0; i < gameObjects.size(); i++) {
         gameObjects[i]->onKey(event);
-        auto spaceShip = std::dynamic_pointer_cast<SpaceShip>(gameObjects[i]); 
-        if(spaceShip && event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) {
+        auto spaceShip = std::dynamic_pointer_cast<SpaceShip>(gameObjects[i]);
+        if (spaceShip && event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) {
             spawnLaser(spaceShip);
         }
     }
-    if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_d){
+    if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_d) {
         debugCollisionCircles = !debugCollisionCircles;
     }
 }
@@ -148,13 +151,12 @@ void AsteroidsGame::keyEvent(SDL_Event &event) {
 void AsteroidsGame::spawnLaser(std::shared_ptr<SpaceShip> spaceShip) {
     auto laserSprite = atlas->get("Lasers/laserBlue01.png");
     auto position = spaceShip->position;
-    glm::vec2 direction = glm::rotateZ(glm::vec3(0,1.0f,0), glm::radians(spaceShip->rotation));
+    glm::vec2 direction = glm::rotateZ(glm::vec3(0, 1.0f, 0), glm::radians(spaceShip->rotation));
     position += direction * spaceShip->getRadius();
     gameObjects.push_back(std::make_shared<Laser>(laserSprite, position, direction));
-
 }
 
-int main(){
+int main() {
     new AsteroidsGame();
     return 0;
 }

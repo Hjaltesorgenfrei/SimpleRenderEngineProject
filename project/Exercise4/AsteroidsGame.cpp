@@ -7,9 +7,36 @@
 #include "AsteroidsGame.hpp"
 #include "GameObject.hpp"
 #include "SpaceShip.hpp"
+#include "Asteroid.hpp"
 #include <iostream>
+#include <algorithm>
 
 using namespace sre;
+
+sre::Sprite getAsteroidOfSize(AsteroidSize size, std::shared_ptr<SpriteAtlas> atlas) {
+    auto names = atlas->getNames();
+    std::string sizeString;
+    switch (size) {
+        case TINY:
+            sizeString = "tiny";
+            break;
+        case SMALL:
+            sizeString = "small";
+            break;
+        case MEDIUM:
+            sizeString = "med";
+            break;
+        case LARGE:
+            sizeString = "big";
+            break;
+    }
+    names.erase(std::remove_if(names.begin(), names.end(), [size, sizeString](std::string name){
+        return strncmp(name.c_str(), "Meteors/", 8) || name.find(sizeString) == std::string::npos;
+    }), names.end());
+    int pick = rand() % names.size();
+
+    return atlas->get(names[pick]);
+}
 
 AsteroidsGame::AsteroidsGame() {
     r.setWindowTitle("Asteroids");
@@ -21,12 +48,14 @@ AsteroidsGame::AsteroidsGame() {
     srand((unsigned) time(&t));
 
     atlas = SpriteAtlas::create("asteroids.json","asteroids.png");
-
-    for (const auto& s : atlas->getNames()) {
-        std::cout << s << "\n";
-    }
     auto spaceshipSprite = atlas->get("playerShip1_green.png");
     gameObjects.push_back(std::make_shared<SpaceShip>(spaceshipSprite));
+
+    for (int i = 0; i < 5; i++) {
+        auto size = (AsteroidSize)(i % (LARGE + 1));
+        auto astroidSprite = getAsteroidOfSize(size, atlas);
+        gameObjects.push_back(std::make_shared<Asteroid>(astroidSprite, size));
+    }
 
     camera.setWindowCoordinates();
 

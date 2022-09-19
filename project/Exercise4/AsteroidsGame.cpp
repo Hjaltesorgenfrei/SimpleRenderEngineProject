@@ -49,7 +49,8 @@ AsteroidsGame::AsteroidsGame() {
 
     atlas = SpriteAtlas::create("asteroids.json","asteroids.png");
     auto spaceshipSprite = atlas->get("playerShip1_green.png");
-    gameObjects.push_back(std::make_shared<SpaceShip>(spaceshipSprite));
+    spaceShip = std::make_shared<SpaceShip>(spaceshipSprite);
+    gameObjects.push_back(spaceShip);
 
     for (int i = 0; i < 5; i++) {
         auto size = (AsteroidSize)(i % (LARGE + 1));
@@ -81,16 +82,16 @@ void AsteroidsGame::update(float deltaTime) {
 }
 
 void drawCircle(std::vector<glm::vec3>& lines, glm::vec2 position, float radius){
-    float quaterPi = glm::quarter_pi<float>();
-    for (float f = 0;f<glm::two_pi<float>();f += quaterPi){
+    float quarterPi = glm::quarter_pi<float>();
+    for (float f = 0;f<glm::two_pi<float>();f += quarterPi){
         // line from
         lines.push_back(glm::vec3{position.x + cosf(f)*radius,
                                   position.y + sinf(f)*radius,
                                   0
         });
         // line to
-        lines.push_back(glm::vec3{position.x + cosf(f+quaterPi)*radius,
-                                  position.y + sinf(f+quaterPi)*radius,
+        lines.push_back(glm::vec3{position.x + cosf(f+quarterPi)*radius,
+                                  position.y + sinf(f+quarterPi)*radius,
                                   0
         });
     }

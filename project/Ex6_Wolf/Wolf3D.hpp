@@ -15,6 +15,7 @@ private:
     void render();
     void addCube(std::vector<glm::vec3>& vertexPositions, std::vector<glm::vec4>& textureCoordinates, int x, int z, int type);
     void renderDebugBricks(sre::RenderPass & renderPass);
+    void renderFloorAndCeiling(sre::RenderPass & renderPass);
     sre::SDLRenderer r;
     sre::Camera camera;
     WorldMap map;
@@ -23,7 +24,7 @@ private:
     FirstPersonController fpsController;
     glm::vec4 floorColor;
     glm::vec4 ceilColor;
-    bool debugBricks = true;
+    bool debugBricks = false;
     bool lockRotation = false;
 
 };

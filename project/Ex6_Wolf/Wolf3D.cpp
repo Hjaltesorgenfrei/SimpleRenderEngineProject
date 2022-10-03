@@ -18,8 +18,8 @@ Wolf3D::Wolf3D()
     init();
 
     // Enable mouse lock
-    // SDL_SetWindowGrab(r.getSDLWindow(),SDL_TRUE);
-    // SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_SetWindowGrab(r.getSDLWindow(),SDL_TRUE);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
 
     r.frameUpdate = [&](float deltaTime){
@@ -54,6 +54,8 @@ void Wolf3D::render() {
         renderDebugBricks(renderPass);
     }
 
+    renderFloorAndCeiling(renderPass);
+
     ImGui::SetNextWindowPos(ImVec2(Renderer::instance->getWindowSize().x/2-100, .0f), ImGuiSetCond_Always);
     ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_Always);
     ImGui::Begin("", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
@@ -68,23 +70,46 @@ void Wolf3D::render() {
 // The cube must be centered at (x,0,z)
 // The texturing
 void Wolf3D::addCube(std::vector<glm::vec3>& vertexPositions, std::vector<glm::vec4>& textureCoordinates, int x, int z, int type){
-    // todo implement this
-
-    // Incomplete implementation - creates two triangles in the xy-plane
     vertexPositions.insert(vertexPositions.end(),{
-            glm::vec3(-0.5,-0.5,0.5), glm::vec3(0.5,-0.5,0.5), glm::vec3(-0.5,0.5,0.5),
-            glm::vec3(0.5,0.5,0.5), glm::vec3(-0.5,0.5,0.5), glm::vec3(0.5,-0.5,0.5)
+            glm::vec3(x + -0.5,-0.5,z + 0.5),  glm::vec3(x + 0.5,-0.5,z + 0.5),  glm::vec3(x + -0.5,0.5,z + 0.5),
+            glm::vec3(x + 0.5,0.5,z + 0.5),    glm::vec3(x + -0.5,0.5,z + 0.5),  glm::vec3(x + 0.5,-0.5,z + 0.5),
+            glm::vec3(x + -0.5,-0.5,z + -0.5), glm::vec3(x + -0.5,-0.5,z + 0.5), glm::vec3(x + -0.5,0.5,z + -0.5),
+            glm::vec3(x + -0.5,0.5,z + 0.5),   glm::vec3(x + -0.5,0.5,z + -0.5), glm::vec3(x + -0.5,-0.5,z + 0.5),
+            glm::vec3(x + 0.5,-0.5,z + 0.5),   glm::vec3(x + 0.5,-0.5,z + -0.5), glm::vec3(x + 0.5,0.5,z + 0.5),
+            glm::vec3(x + 0.5,0.5,z + -0.5),   glm::vec3(x + 0.5,0.5,z + 0.5),   glm::vec3(x + 0.5,-0.5,z + -0.5), 
+            glm::vec3(x + 0.5,-0.5,z + -0.5),  glm::vec3(x + -0.5,-0.5,z + -0.5),glm::vec3(x + 0.5,0.5,z + -0.5),
+            glm::vec3(x + -0.5,0.5,z + -0.5),  glm::vec3(x + 0.5,0.5,z + -0.5),  glm::vec3(x + -0.5,-0.5,z + -0.5),
+            glm::vec3(x + -0.5,-0.5,z + -0.5), glm::vec3(x + 0.5,-0.5,z + -0.5), glm::vec3(x + -0.5,-0.5,z + 0.5),
+            glm::vec3(x + 0.5,-0.5,z + 0.5),   glm::vec3(x + -0.5,-0.5,z + 0.5), glm::vec3(x + 0.5,-0.5,z + -0.5),
+            glm::vec3(x + -0.5,0.5,z + -0.5),  glm::vec3(x + -0.5,0.5,z + 0.5),  glm::vec3(x + 0.5,0.5,z + -0.5),
+            glm::vec3(x + 0.5,0.5,z + 0.5),    glm::vec3(x + 0.5,0.5,z + -0.5),  glm::vec3(x + -0.5,0.5,z + 0.5),
     });
+
 
     glm::vec2 textureSize(2048,4096);
     glm::vec2 tileSize(64,64);
     glm::vec2 tileSizeWithBorder(65,65);
+    
+    auto tileIndexX = (type * 2) % 16;
+    auto tileIndexY = ((type * 2) / 16);
 
-    glm::vec2 min = vec2(0,42*tileSizeWithBorder.y) / textureSize;
+    glm::vec2 min = vec2(tileIndexX * tileSizeWithBorder.x,(42 - tileIndexY)*tileSizeWithBorder.y) / textureSize;
     glm::vec2 max = min+tileSize / textureSize;
+    glm::vec2 minDark = vec2((tileIndexX + 1) * tileSizeWithBorder.x,(42 - tileIndexY)*tileSizeWithBorder.y) / textureSize;
+    glm::vec2 maxDark = minDark+tileSize / textureSize;
     textureCoordinates.insert(textureCoordinates.end(),{
             glm::vec4(min.x,min.y,0,0), glm::vec4(max.x,min.y,0,0), glm::vec4(min.x,max.y,0,0),
-            glm::vec4(max.x,max.y,0,0), glm::vec4(min.x,max.y,0,0), glm::vec4(max.x,min.y,0,0)
+            glm::vec4(max.x,max.y,0,0), glm::vec4(min.x,max.y,0,0), glm::vec4(max.x,min.y,0,0),
+            glm::vec4(min.x,min.y,0,0), glm::vec4(max.x,min.y,0,0), glm::vec4(min.x,max.y,0,0),
+            glm::vec4(max.x,max.y,0,0), glm::vec4(min.x,max.y,0,0), glm::vec4(max.x,min.y,0,0),
+            glm::vec4(min.x,min.y,0,0), glm::vec4(max.x,min.y,0,0), glm::vec4(min.x,max.y,0,0),
+            glm::vec4(max.x,max.y,0,0), glm::vec4(min.x,max.y,0,0), glm::vec4(max.x,min.y,0,0),
+            glm::vec4(min.x,min.y,0,0), glm::vec4(max.x,min.y,0,0), glm::vec4(min.x,max.y,0,0),
+            glm::vec4(max.x,max.y,0,0), glm::vec4(min.x,max.y,0,0), glm::vec4(max.x,min.y,0,0),
+            glm::vec4(minDark.x,minDark.y,0,0), glm::vec4(maxDark.x,minDark.y,0,0), glm::vec4(minDark.x,maxDark.y,0,0),
+            glm::vec4(maxDark.x,maxDark.y,0,0), glm::vec4(minDark.x,maxDark.y,0,0), glm::vec4(maxDark.x,minDark.y,0,0),
+            glm::vec4(minDark.x,minDark.y,0,0), glm::vec4(maxDark.x,minDark.y,0,0), glm::vec4(minDark.x,maxDark.y,0,0),
+            glm::vec4(maxDark.x,maxDark.y,0,0), glm::vec4(minDark.x,maxDark.y,0,0), glm::vec4(maxDark.x,minDark.y,0,0)
     });
 }
 
@@ -97,6 +122,8 @@ void Wolf3D::init() {
     wallMaterial->setTexture(texture);
 
     map.loadMap("level0.json");
+    ceilColor = map.getCeilColor();
+    floorColor = map.getFloorColor();
 
     std::vector<glm::vec3> vertexPositions;
     std::vector<glm::vec4> textureCoordinates;
@@ -136,10 +163,38 @@ void Wolf3D::renderDebugBricks(RenderPass & renderPass){
             {0,1,0,1},
             {0,0,1,1},
     };
-    for (int i=0;i<positions.size();i++){
+    for (size_t i=0 ;i<positions.size();i++){
         materials[i]->setColor(colors[i]);
         renderPass.draw(cube, glm::translate(positions[i]), materials[i]);
     }
+}
+
+void Wolf3D::renderFloorAndCeiling(RenderPass & renderPass){
+    const float size = 100000.0f;
+
+    auto floor = Mesh::create().withPositions({
+            {size,-0.6,-size},
+            {-size,-0.6,-size},
+            {size,-0.6,size},
+            {-size,-0.6,-size},
+            {-size,-0.6,size},
+            {size,-0.6,size},
+    }).build();
+    auto ceil = Mesh::create().withPositions({
+            {-size,0.6,-size},
+            {size,0.6,-size},
+            {size,0.6,size},
+            {-size,0.6,size},
+            {-size,0.6,-size},
+            {size,0.6,size},
+    }).build();
+
+    auto floorMat = Shader::getUnlit()->createMaterial();
+    floorMat->setColor(Color(floorColor));
+    auto ceilMat = Shader::getUnlit()->createMaterial();
+    ceilMat->setColor(Color(ceilColor));
+    renderPass.draw(floor, glm::mat4(1), floorMat);
+    renderPass.draw(ceil, glm::mat4(1), ceilMat);
 }
 
 int main(){

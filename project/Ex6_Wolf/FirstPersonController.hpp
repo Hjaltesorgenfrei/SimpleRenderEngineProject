@@ -21,9 +21,6 @@ private:
     sre::Camera * camera;
 
     // todo remove
-    bool fwd;
-    bool bwd;
-    bool left;
-    bool right;
+    bool fwd = false, bwd = false, left = false, right = false;
 };
 

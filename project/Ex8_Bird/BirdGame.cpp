@@ -7,7 +7,10 @@
 #include "SpriteAnimationComponent.hpp"
 #include "Box2D/Dynamics/Contacts/b2Contact.h"
 #include "PhysicsComponent.hpp"
+#include "WallComponent.hpp"
 #include "BirdController.hpp"
+#include "GameState.hpp"
+#include "CoinComponent.hpp"
 
 using namespace std;
 using namespace sre;
@@ -70,6 +73,7 @@ void BirdGame::init() {
     auto phys = birdObj->addComponent<PhysicsComponent>();
     phys->initCircle(b2_dynamicBody, 10/physicsScale, {birdObj->getPosition().x/physicsScale,birdObj->getPosition().y/physicsScale}, 1);
     auto birdC = birdObj->addComponent<BirdController>();
+    birdC->gameState = gameState;
 
     vector<Sprite> spriteAnim({spriteAtlas->get("bird1.png"),spriteAtlas->get("bird2.png"),spriteAtlas->get("bird3.png"),spriteAtlas->get("bird2.png")});
     for(auto & s : spriteAnim){
@@ -87,6 +91,7 @@ void BirdGame::init() {
     for (int i=0;i<length;i++) {
         auto obj = createGameObject();
         obj->name = "Wall bottom";
+        obj->addComponent<WallComponent>();
         auto so = obj->addComponent<SpriteComponent>();
 
         float xOffset = xVariation * cos(i*curve*0.2f);
@@ -95,6 +100,9 @@ void BirdGame::init() {
         so->setSprite(spriteBottom);
 
         glm::vec2 s { spriteBottom.getSpriteSize().x * spriteBottom.getScale().x/2, spriteBottom.getSpriteSize().y * spriteBottom.getScale().y/2};
+
+        auto wallPhys = obj->addComponent<PhysicsComponent>();
+        wallPhys->initBox(b2_kinematicBody, s/physicsScale, obj->getPosition()/physicsScale, 0);
     }
     auto spriteTop = spriteAtlas->get("column_top.png");
     spriteTop.setScale({2,2});
@@ -102,20 +110,58 @@ void BirdGame::init() {
         auto obj = createGameObject();
         obj->name = "Wall top";
         auto so = obj->addComponent<SpriteComponent>();
+        obj->addComponent<WallComponent>();
 
         float xOffset = xVariation * cos(i*curve*0.2f);
         glm::vec2 pos{ i*300+xOffset, windowSize.y-spriteTop.getSpriteSize().y/2 + sin(i*curve)*heighVariation};
         obj->setPosition(pos);
         glm::vec2 s { spriteTop.getSpriteSize().x * spriteTop.getScale().x/2, spriteTop.getSpriteSize().y * spriteTop.getScale().y/2};
         so->setSprite(spriteTop);
+
+        auto wallPhys = obj->addComponent<PhysicsComponent>();
+        wallPhys->initBox(b2_kinematicBody, s/physicsScale, obj->getPosition()/physicsScale, 0);
+    }
+
+    auto spriteCoin = spriteAtlas->get("coin.png");
+    spriteCoin.setScale({2,2});
+     for (int i=0;i<length;i++) {
+        auto obj = createGameObject();
+        obj->name = "Coin";
+        auto so = obj->addComponent<SpriteComponent>();
+        obj->addComponent<CoinComponent>();
+
+        float xOffset = xVariation * sin(i*curve*4.287f);
+        glm::vec2 pos{i*300+xOffset * 2,300 + cos(i*curve)*heighVariation};
+        obj->setPosition(pos);
+        so->setSprite(spriteCoin);
+
+        glm::vec2 s { spriteCoin.getSpriteSize().x * spriteCoin.getScale().x/2, spriteCoin.getSpriteSize().y * spriteBottom.getScale().y/2};
+
+        auto coinPhys = obj->addComponent<PhysicsComponent>();
+        coinPhys->initCircle(b2_kinematicBody, 20.0f/physicsScale, obj->getPosition()/physicsScale, 0);
+        coinPhys->setSensor(true);
     }
 
     background1Component.init("background.png");
     background2Component.init("background2.png");
+
+    auto birdX = birdObj->getPosition().x;
+    auto bottom = createGameObject();
+    bottom->addComponent<WallComponent>();
+    auto bottomPhys = bottom->addComponent<PhysicsComponent>();
+    bottomPhys->initBox(b2_kinematicBody, glm::vec2(10.0f,0.1f), glm::vec2(birdX / physicsScale, 120.0f / physicsScale), 0);
+    bottomPhys->setLinearVelocity(glm::vec2(1.0f, 0.0f));
+
+    auto top = createGameObject();
+    top->addComponent<WallComponent>();
+    auto topPhys = top->addComponent<PhysicsComponent>();
+    topPhys->initBox(b2_kinematicBody, glm::vec2(10.0f,0.1f), glm::vec2(birdX / physicsScale, 610.0f / physicsScale), 0);
+    topPhys->setLinearVelocity(glm::vec2(1.0f, 0.0f));
+
 }
 
 void BirdGame::update(float time) {
-    if (gameState == GameState::Running){
+    if (*gameState == GameState::Running){
         updatePhysics();
     }
     for (int i=0;i<sceneObjects.size();i++){
@@ -136,11 +182,11 @@ void BirdGame::render() {
         go->renderSprite(spriteBatchBuilder);
     }
 
-    if (gameState == GameState::Ready){
+    if (*gameState == GameState::Ready){
         auto sprite = spriteAtlas->get("get-ready.png");
         sprite.setPosition(pos);
         spriteBatchBuilder.addSprite(sprite);
-    } else if (gameState == GameState::GameOver){
+    } else if (*gameState == GameState::GameOver){
         auto sprite = spriteAtlas->get("game-over.png");
         sprite.setPosition(pos);
         spriteBatchBuilder.addSprite(sprite);
@@ -183,11 +229,11 @@ void BirdGame::onKey(SDL_Event &event) {
                 init();
                 break;
             case SDLK_SPACE:
-                if (gameState == GameState::GameOver){
+                if (*gameState == GameState::GameOver){
                     init();
-                    gameState = GameState::Ready;
-                } else if (gameState == GameState::Ready){
-                    gameState = GameState::Running;
+                    *gameState = GameState::Ready;
+                } else if (*gameState == GameState::Ready){
+                    *gameState = GameState::Running;
                 }
                 break;
 
@@ -277,5 +323,5 @@ void BirdGame::handleContact(b2Contact *contact, bool begin) {
 }
 
 void BirdGame::setGameState(GameState newState) {
-    this->gameState = newState;
+    *this->gameState = newState;
 }

@@ -6,14 +6,9 @@
 #include "SideScrollingCamera.hpp"
 #include "BackgroundComponent.hpp"
 #include "Box2DDebugDraw.hpp"
+#include "GameState.hpp"
 
 class PhysicsComponent;
-
-enum class GameState{
-    Ready,
-    Running,
-    GameOver
-};
 
 class BirdGame : public b2ContactListener {
 public:
@@ -58,7 +53,7 @@ private:
     std::map<b2Fixture*,PhysicsComponent *> physicsComponentLookup;
     Box2DDebugDraw debugDraw;
     bool doDebugDraw = false;
-    GameState gameState = GameState::Ready;
+    std::shared_ptr<GameState> gameState = std::make_shared<GameState>(GameState::Ready);
     friend class PhysicsComponent;
 };
 
